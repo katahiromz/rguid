@@ -17,7 +17,7 @@ rguid --help
 rguid --version
 ```
 
-You can specify multiple GUIDs.
+You can specify partial GUIDs and multiple GUIDs.
 
 ## Screenshot
 

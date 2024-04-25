@@ -15,7 +15,7 @@ This program "rguid" is a command line tool for Win32, to search, convert, and/o
     rguid --help
     rguid --version
 
-You can specify multiple GUIDs.
+You can specify partial GUIDs and multiple GUIDs.
 
 ## License
 

@@ -469,7 +469,7 @@ std::wstring guid_dump(const GUID& guid, LPCWSTR name)
     ret += L"\n\n";
 
     auto hex_text = guid_to_hex_text(guid);
-    ret += L"Bytes: ";
+    ret += L"Hex: ";
     ret += hex_text;
     ret += L"\n\n";
 
