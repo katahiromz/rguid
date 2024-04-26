@@ -147,7 +147,7 @@ public:
         m_data = guid_load_data_w(filename);
         return is_loaded();
     }
-    bool is_loaded() const { return !!m_data; }
+    bool is_loaded() const { return !!m_data && !empty(); }
 
     void close()
     {

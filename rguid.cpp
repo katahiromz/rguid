@@ -279,13 +279,10 @@ int main(int argc, char **argv)
     if (ret == RET_FAILED)
         return -1;
 
-    if (!g_database.load(L"guid.dat"))
-        return -2;
-
-    if (g_database.empty() && !g_bList && g_nGenerate == 0)
+    if (!g_database.load(L"guid.dat") && !g_bList && g_nGenerate == 0)
     {
-        std::printf("ERROR: File 'guid.dat' is empty or not loaded\n");
-        return -3;
+        std::printf("ERROR: File 'guid.dat' is not loaded\n");
+        return -2;
     }
 
     if (g_bList)
