@@ -47,17 +47,12 @@ typedef enum RET
     RET_SUCCESS = +1,
 } RET;
 
-bool do_read_data(void)
-{
-    return g_database.load(L"guid.dat");
-}
-
 void do_unittest(void)
 {
 #ifndef NDEBUG
     GUID guid = IID_IShellLinkW;
 
-    assert(do_read_data());
+    assert(g_database.load(L"guid.dat"));
 
     GUID_FOUND found;
     assert(g_database.search_by_name(found, L"IID_IShellLinkW"));
@@ -284,10 +279,10 @@ int main(int argc, char **argv)
     if (ret == RET_FAILED)
         return -1;
 
-    if (!do_read_data())
+    if (!g_database.load(L"guid.dat"))
         return -2;
 
-    if (!g_database.is_loaded() && !g_bList && g_nGenerate == 0)
+    if (g_database.empty() && !g_bList && g_nGenerate == 0)
     {
         std::printf("ERROR: File 'guid.dat' is empty or not loaded\n");
         return -3;

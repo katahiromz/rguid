@@ -125,6 +125,16 @@ public:
         close();
     }
 
+    size_t size() const
+    {
+        return m_data ? m_data->size() : 0;
+    }
+
+    bool empty() const
+    {
+        return !size();
+    }
+
     bool load(const char *filename)
     {
         if (m_data) close();
