@@ -52,21 +52,15 @@ mstr_split(T_STR_CONTAINER& container,
     container.push_back(str.substr(i));
 }
 
-template <typename T_CHAR>
+template <typename T_STR>
 static inline void
-mstr_trim(std::basic_string<T_CHAR>& str, const T_CHAR* spaces)
+mstr_trim(T_STR& str, const typename T_STR::value_type* spaces)
 {
-    typedef std::basic_string<T_CHAR> string_type;
-    size_t i = str.find_first_not_of(spaces);
-    size_t j = str.find_last_not_of(spaces);
-    if ((i == string_type::npos) || (j == string_type::npos))
-    {
+    size_t i = str.find_first_not_of(spaces), j = str.find_last_not_of(spaces);
+    if ((i == T_STR::npos) || (j == T_STR::npos))
         str.clear();
-    }
     else
-    {
         str = str.substr(i, j - i + 1);
-    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
