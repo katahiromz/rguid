@@ -4,11 +4,11 @@
 cmake_minimum_required(VERSION 3.5)
 
 # project name and languages
-project(guid CXX)
+project(rguid CXX)
 
 ##############################################################################
 
-option(WANT_RGUID "Do you want rguid?" ON)
+option(WANT_RGUID_EXE "Do you want rguid.exe?" ON)
 
 ##############################################################################
 
@@ -16,7 +16,7 @@ option(WANT_RGUID "Do you want rguid?" ON)
 add_library(guid STATIC guid.cpp StringFromGUID2.cpp CLSIDFromString.cpp)
 target_compile_definitions(guid PRIVATE UNICODE _UNICODE _WON32)
 
-if(WANT_RGUID)
+if(WANT_RGUID_EXE)
     # rguid.exe
     add_executable(rguid rguid.cpp)
     target_compile_definitions(rguid PRIVATE UNICODE _UNICODE)
