@@ -2,9 +2,11 @@
 // License: MIT
 
 #include "guid.h"
-#include <shlwapi.h>
-#include <shlobj.h>
 #include <cassert>
+
+#if !defined(_WIN32) || defined(_WON32)
+DEFINE_GUID(IID_IShellLinkW, 0x000214F9, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);
+#endif
 
 GuidDataBase g_database;
 bool g_bSearch = false;
@@ -47,11 +49,7 @@ typedef enum RET
 
 bool do_read_data(void)
 {
-    WCHAR szPath[MAX_PATH];
-    GetModuleFileNameW(NULL, szPath, _countof(szPath));
-    PathRemoveFileSpecW(szPath);
-    PathAppendW(szPath, L"guid.dat");
-    return g_database.load(szPath);
+    return g_database.load(L"guid.dat");
 }
 
 void do_unittest(void)
@@ -201,7 +199,7 @@ bool is_ident(const wchar_t *param)
     return true;
 }
 
-RET parse_cmd_line(std::vector<std::wstring>& args, int argc, wchar_t **argv)
+RET parse_cmd_line(std::vector<std::wstring>& args, int argc, char **argv)
 {
     if (argc <= 1)
     {
@@ -213,7 +211,7 @@ RET parse_cmd_line(std::vector<std::wstring>& args, int argc, wchar_t **argv)
 
     for (int iarg = 1; iarg < argc; ++iarg)
     {
-        std::wstring str = argv[iarg];
+        std::wstring str = guid_wide_from_ansi(argv[iarg]);
 
         if (str[0] == L'-')
         {
@@ -222,7 +220,7 @@ RET parse_cmd_line(std::vector<std::wstring>& args, int argc, wchar_t **argv)
                 if (argc <= iarg + 1)
                     g_nGenerate = 1;
                 else
-                    g_nGenerate = _wtoi(argv[iarg + 1]);
+                    g_nGenerate = atoi(argv[iarg + 1]);
 
                 if (g_nGenerate <= 0)
                 {
@@ -273,7 +271,7 @@ RET parse_cmd_line(std::vector<std::wstring>& args, int argc, wchar_t **argv)
     return RET_SUCCESS;
 }
 
-int _wmain(int argc, wchar_t **argv)
+int main(int argc, char **argv)
 {
 #ifndef NDEBUG
     do_unittest();
@@ -323,13 +321,4 @@ int _wmain(int argc, wchar_t **argv)
     }
 
     return 0;
-}
-
-int main(void)
-{
-    int argc;
-    wchar_t **argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-    int ret = _wmain(argc, argv);
-    LocalFree(argv);
-    return ret;
 }

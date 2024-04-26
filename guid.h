@@ -16,7 +16,7 @@
 #define GUID_VERSION "rguid version 1.9.4 by katahiromz"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-// GUID / REFGUID
+// GUID / REFGUID / DEFINE_GUID
 
 #if !defined(_WIN32) || defined(_WON32)
 typedef struct _GUID
@@ -27,6 +27,8 @@ typedef struct _GUID
     uint8_t Data4[8];
 } GUID;
 typedef const GUID& REFGUID;
+#define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+    const GUID name = { l, w1, w2, { b1, b2, b3, b4, b5, b6, b7, b8 } }
 #endif  // ndef _WIN32
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -71,8 +73,8 @@ bool guid_equal(const GUID& guid1, const GUID& guid2);
 
 #ifdef _WIN32
 std::string guid_ansi_from_wide (const wchar_t *text, unsigned int cp = 0);
-std::wstring guid_wide_from_ansi(const  char   *text, unsigned int cp = 0);
 #endif
+std::wstring guid_wide_from_ansi(const  char   *text, unsigned int cp = 0);
 
 bool guid_from_definition(GUID& guid, const wchar_t *text);
 bool guid_from_definition(GUID& guid, const wchar_t *text, std::wstring *p_name);

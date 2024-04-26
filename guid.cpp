@@ -238,15 +238,24 @@ std::string guid_ansi_from_wide(const wchar_t *text, unsigned int cp)
     buf[_countof(buf) - 1] = 0; // Avoid buffer overrun
     return buf;
 }
+#endif
 
 std::wstring guid_wide_from_ansi(const char *text, unsigned int cp)
 {
     wchar_t buf[1024];
+#if defined(_WIN32) && !defined(_WON32)
     ::MultiByteToWideChar(cp, 0, text, -1, buf, _countof(buf));
     buf[_countof(buf) - 1] = 0; // Avoid buffer overrun
+#else
+    size_t ich;
+    for (ich = 0; text[ich] && ich < sizeof(buf) / sizeof(buf[0]); ++ich)
+    {
+        buf[ich] = text[ich];
+    }
+    buf[ich] = 0;
+#endif
     return buf;
 }
-#endif
 
 GUID_DATA* guid_read_from_file(FILE *fp)
 {

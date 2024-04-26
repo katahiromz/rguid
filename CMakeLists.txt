@@ -44,7 +44,7 @@ endif()
 if(RGUID_WANT_EXE)
     # rguid.exe
     add_executable(rguid rguid.cpp)
-    target_compile_definitions(rguid PRIVATE UNICODE _UNICODE ${RGUID_DEFINITIONS})
+    target_compile_definitions(rguid PRIVATE ${RGUID_DEFINITIONS})
     target_include_directories(rguid PRIVATE ${RGUID_INCLUDE_DIRS})
     target_link_libraries(rguid PRIVATE shlwapi ${RGUID_LIBRARIES})
 endif()
