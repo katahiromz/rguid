@@ -16,7 +16,7 @@ option(RGUID_VERBOSE "Verbose mode" ON)
 ##############################################################################
 
 # libguid.a
-add_library(guid STATIC guid.cpp StringFromGUID2.cpp CLSIDFromString.cpp)
+add_library(guid STATIC guid.cpp WonStringFromGUID2.cpp WonCLSIDFromString.cpp)
 if(RGUID_USE_WON32)
     target_compile_definitions(guid PRIVATE _WON32)
 endif()

@@ -4,8 +4,8 @@
 #include "guid.h"
 #include <cstring>
 #include <cassert>
-#include "CLSIDFromString.h"
-#include "StringFromGUID2.h"
+#include "WonCLSIDFromString.h"
+#include "WonStringFromGUID2.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -149,7 +149,7 @@ bool guid_from_definition(GUID& guid, const wchar_t *text)
 
 bool guid_from_guid_text(GUID& guid, const wchar_t *text)
 {
-    return ::CLSIDFromString(text, &guid) == S_OK;
+    return WonCLSIDFromString(text, &guid) == S_OK;
 }
 
 bool guid_from_struct_text(GUID& guid, std::wstring str)
@@ -227,7 +227,7 @@ bool guid_from_struct_text(GUID& guid, std::wstring str)
 std::wstring guid_to_guid_text(const GUID& guid)
 {
     wchar_t text[40];
-    ::StringFromGUID2(guid, text, _countof(text));
+    WonStringFromGUID2(guid, text, _countof(text));
     return text;
 }
 

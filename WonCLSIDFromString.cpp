@@ -75,7 +75,7 @@ static bool guid_from_string(const wchar_t *s, GUID *id)
 #ifdef __cplusplus
 extern "C"
 #endif
-uint32_t CLSIDFromString(const wchar_t *idstr, GUID *id)
+uint32_t WonCLSIDFromString(const wchar_t *idstr, GUID *id)
 {
     HRESULT ret = CO_E_CLASSSTRING;
 

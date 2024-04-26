@@ -3,7 +3,7 @@
 #if !defined(_WIN32) || defined(_WON32)
 
 extern "C"
-int StringFromGUID2(REFGUID id, wchar_t *str, int cmax)
+int WonStringFromGUID2(REFGUID id, wchar_t *str, int cmax)
 {
 #define CHARS_IN_GUID 39
     static const wchar_t formatW[] = L"{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}";
