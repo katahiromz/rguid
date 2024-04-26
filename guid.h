@@ -3,14 +3,41 @@
 
 #pragma once
 
+#if defined(_WIN32) && !defined(_WON32)
 #include <windows.h>
+#endif
 #include <string>
 #include <vector>
 #include <cstdio> // for FILE
+#include <cstdint>
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define GUID_VERSION "rguid version 1.9.3 by katahiromz"
+#define GUID_VERSION "rguid version 1.9.4 by katahiromz"
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// GUID / REFGUID
+
+#if !defined(_WIN32) || defined(_WON32)
+typedef struct _GUID
+{
+    uint32_t Data1;
+    uint16_t Data2;
+    uint16_t Data3;
+    uint8_t Data4[8];
+} GUID;
+typedef const GUID& REFGUID;
+#endif  // ndef _WIN32
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// HRESULT
+
+#if !defined(_WIN32) || defined(_WON32)
+typedef uint32_t HRESULT;
+#define S_OK 0
+#define E_INVALIDARG 0x80070057
+#define CO_E_CLASSSTRING 0x800401F3
+#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // GUID_ENTRY / GUID_DATA / GUID_FOUND
@@ -23,7 +50,9 @@ struct GUID_ENTRY
 typedef std::vector<GUID_ENTRY> GUID_DATA, GUID_FOUND;
 
 GUID_DATA* guid_load_data_a(const  char   *data_file);
+#ifdef _WIN32
 GUID_DATA* guid_load_data_w(const wchar_t *data_file);
+#endif
 
 #ifdef UNICODE
     #define guid_load_data guid_load_data_w
@@ -39,8 +68,11 @@ void guid_close_data(GUID_DATA *data);
 void guid_random_generate(GUID& guid);
 
 bool guid_equal(const GUID& guid1, const GUID& guid2);
-std::string guid_ansi_from_wide (const wchar_t *text, unsigned int cp = CP_ACP);
-std::wstring guid_wide_from_ansi(const  char   *text, unsigned int cp = CP_ACP);
+
+#ifdef _WIN32
+std::string guid_ansi_from_wide (const wchar_t *text, unsigned int cp = 0);
+std::wstring guid_wide_from_ansi(const  char   *text, unsigned int cp = 0);
+#endif
 
 bool guid_from_definition(GUID& guid, const wchar_t *text);
 bool guid_from_definition(GUID& guid, const wchar_t *text, std::wstring *p_name);
@@ -48,7 +80,7 @@ bool guid_from_guid_text(GUID& guid, const wchar_t *text);
 bool guid_from_struct_text(GUID& guid, const wchar_t *text);
 bool guid_from_hex_text(GUID& guid, const wchar_t *text);
 
-std::wstring guid_to_definition(const GUID& guid, const wchar_t *name OPTIONAL);
+std::wstring guid_to_definition(const GUID& guid, const wchar_t *name = NULL);
 std::wstring guid_to_guid_text(const GUID& guid);
 std::wstring guid_to_struct_text(const GUID& guid);
 std::wstring guid_to_hex_text(const GUID& guid);

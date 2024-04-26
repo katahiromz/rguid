@@ -9,7 +9,8 @@ project(guid CXX)
 ##############################################################################
 
 # libguid.a
-add_library(guid STATIC guid.cpp)
+add_library(guid STATIC guid.cpp StringFromGUID2.cpp CLSIDFromString.cpp)
+target_compile_definitions(guid PRIVATE UNICODE _UNICODE _WON32)
 
 # rguid.exe
 add_executable(rguid rguid.cpp)

@@ -1,7 +1,7 @@
 // rguid.cpp --- The GUID analyzer
 // License: MIT
 
-#include "guid.hpp"
+#include "guid.h"
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <cassert>

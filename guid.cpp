@@ -1,11 +1,10 @@
 // guid.cpp - The GUID analyzer library
 // License: MIT
 
-#include <windows.h>
-#include <shlobj.h>
-#include <cstdint>
-#include <strsafe.h>
-#include "guid.hpp"
+#include "guid.h"
+#include <cstring>
+#include "CLSIDFromString.h"
+#include "StringFromGUID2.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -73,7 +72,11 @@ mstr_trim(std::basic_string<T_CHAR>& str, const T_CHAR* spaces)
 
 bool guid_equal(const GUID& guid1, const GUID& guid2)
 {
+#if defined(_WIN32) && !defined(_WON32)
     return ::IsEqualGUID(guid1, guid2);
+#else
+    return memcmp(&guid1, &guid2, sizeof(guid1)) == 0;
+#endif
 }
 
 bool guid_from_definition(GUID& guid, const wchar_t *text, std::wstring *p_name)
@@ -205,19 +208,19 @@ bool guid_from_struct_text(GUID& guid, std::wstring str)
         mstr_trim(item, L" \t");
     }
 
-    guid.Data1 = wcstoul(items[0].c_str(), NULL, 0);
-    guid.Data2 = (USHORT)wcstoul(items[1].c_str(), NULL, 0);
-    guid.Data3 = (USHORT)wcstoul(items[2].c_str(), NULL, 0);
-    guid.Data4[0] = (BYTE)wcstoul(items[3].c_str(), NULL, 0);
-    guid.Data4[1] = (BYTE)wcstoul(items[4].c_str(), NULL, 0);
-    guid.Data4[2] = (BYTE)wcstoul(items[5].c_str(), NULL, 0);
-    guid.Data4[3] = (BYTE)wcstoul(items[6].c_str(), NULL, 0);
-    guid.Data4[4] = (BYTE)wcstoul(items[7].c_str(), NULL, 0);
-    guid.Data4[5] = (BYTE)wcstoul(items[8].c_str(), NULL, 0);
-    guid.Data4[6] = (BYTE)wcstoul(items[9].c_str(), NULL, 0);
-    guid.Data4[7] = (BYTE)wcstoul(items[10].c_str(), NULL, 0);
+    guid.Data1 = (uint32_t)wcstoul(items[0].c_str(), NULL, 0);
+    guid.Data2 = (uint16_t)wcstoul(items[1].c_str(), NULL, 0);
+    guid.Data3 = (uint16_t)wcstoul(items[2].c_str(), NULL, 0);
+    guid.Data4[0] = (uint8_t)wcstoul(items[3].c_str(), NULL, 0);
+    guid.Data4[1] = (uint8_t)wcstoul(items[4].c_str(), NULL, 0);
+    guid.Data4[2] = (uint8_t)wcstoul(items[5].c_str(), NULL, 0);
+    guid.Data4[3] = (uint8_t)wcstoul(items[6].c_str(), NULL, 0);
+    guid.Data4[4] = (uint8_t)wcstoul(items[7].c_str(), NULL, 0);
+    guid.Data4[5] = (uint8_t)wcstoul(items[8].c_str(), NULL, 0);
+    guid.Data4[6] = (uint8_t)wcstoul(items[9].c_str(), NULL, 0);
+    guid.Data4[7] = (uint8_t)wcstoul(items[10].c_str(), NULL, 0);
 
-    return TRUE;
+    return true;
 }
 
 std::wstring guid_to_guid_text(const GUID& guid)
@@ -227,6 +230,7 @@ std::wstring guid_to_guid_text(const GUID& guid)
     return text;
 }
 
+#if defined(_WIN32) && !defined(_WON32)
 std::string guid_ansi_from_wide(const wchar_t *text, unsigned int cp)
 {
     char buf[1024];
@@ -242,6 +246,7 @@ std::wstring guid_wide_from_ansi(const char *text, unsigned int cp)
     buf[_countof(buf) - 1] = 0; // Avoid buffer overrun
     return buf;
 }
+#endif
 
 GUID_DATA* guid_read_from_file(FILE *fp)
 {
@@ -252,7 +257,13 @@ GUID_DATA* guid_read_from_file(FILE *fp)
     {
         std::string str = buf;
         mstr_trim(str, " \t\r\n");
+#if defined(_WIN32) && !defined(_WON32)
         auto wide = guid_wide_from_ansi(str.c_str(), CP_UTF8);
+#else
+        std::wstring wide;
+        for (size_t i = 0; i < str.size(); ++i)
+            wide += str[i];
+#endif
 
         GUID guid;
         std::wstring name;
@@ -274,6 +285,7 @@ GUID_DATA *guid_load_data_a(const char *data_file)
     return ptr;
 }
 
+#ifdef _WIN32
 GUID_DATA *guid_load_data_w(const wchar_t *data_file)
 {
     FILE *fp = _wfopen(data_file, L"rb");
@@ -284,6 +296,7 @@ GUID_DATA *guid_load_data_w(const wchar_t *data_file)
     fclose(fp);
     return ptr;
 }
+#endif
 
 void guid_close_data(GUID_DATA *data)
 {
@@ -299,7 +312,9 @@ std::wstring guid_to_hex_text(const GUID& guid)
         if (ib)
             ret += L' ';
         wchar_t sz[3];
-        StringCchPrintfW(sz, _countof(sz), L"%02X", pb[ib]);
+        sz[0] = L"0123456789ABCDEF"[pb[ib] & 0xF];
+        sz[1] = L"0123456789ABCDEF"[pb[ib] >> 4];
+        sz[2] = 0;
         ret += sz;
     }
     return ret;
@@ -384,7 +399,7 @@ bool guid_from_hex_text(GUID& guid, const wchar_t *text)
     std::wstring str = text;
     mstr_replace_all(str, L"0x", L"");
 
-    CLSID ret;
+    GUID ret;
     std::vector<uint8_t> bytes;
     wchar_t sz[3];
     size_t ich = 0, ib = 0;
@@ -407,7 +422,7 @@ bool guid_from_hex_text(GUID& guid, const wchar_t *text)
         ich++;
     }
 
-    if (ib != sizeof(CLSID))
+    if (ib != sizeof(GUID))
         return false;
 
     memcpy(&guid, bytes.data(), sizeof(ret));
@@ -417,7 +432,7 @@ bool guid_from_hex_text(GUID& guid, const wchar_t *text)
 std::wstring guid_to_definition(const GUID& guid, const wchar_t *name)
 {
     wchar_t sz[256];
-    StringCchPrintfW(sz, _countof(sz),
+    swprintf(sz,
         L"DEFINE_GUID(%ls, 0x%08X, 0x%04X, 0x%04X, 0x%02X, 0x%02X, 0x%02X, "
         L"0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X);", (name && name[0] ? name : L"<Name>"),
         guid.Data1, guid.Data2, guid.Data3,
@@ -429,7 +444,7 @@ std::wstring guid_to_definition(const GUID& guid, const wchar_t *name)
 std::wstring guid_to_struct_text(const GUID& guid)
 {
     wchar_t sz[256];
-    StringCchPrintfW(sz, _countof(sz),
+    swprintf(sz,
         L"{ 0x%08X, 0x%04X, 0x%04X, { 0x%02X, 0x%02X, 0x%02X, "
         L"0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X } }",
         guid.Data1, guid.Data2, guid.Data3,
@@ -452,7 +467,7 @@ bool guid_parse(GUID& guid, const wchar_t *text)
     return false;
 }
 
-std::wstring guid_dump(const GUID& guid, LPCWSTR name)
+std::wstring guid_dump(const GUID& guid, const wchar_t *name)
 {
     if (name && name[0] == 0)
         name = NULL;
