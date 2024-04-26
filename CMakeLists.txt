@@ -23,8 +23,6 @@ endif()
 
 if(RGUID_USE_WON32)
     set(RGUID_DEFINITIONS "_WON32")
-else()
-    set(RGUID_DEFINITIONS "")
 endif()
 set(RGUID_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}")
 set(RGUID_LIBRARIES guid)
