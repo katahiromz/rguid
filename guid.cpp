@@ -3,6 +3,7 @@
 
 #include "guid.h"
 #include <cstring>
+#include <cassert>
 #include "CLSIDFromString.h"
 #include "StringFromGUID2.h"
 
@@ -230,15 +231,24 @@ std::wstring guid_to_guid_text(const GUID& guid)
     return text;
 }
 
-#if defined(_WIN32) && !defined(_WON32)
 std::string guid_ansi_from_wide(const wchar_t *text, unsigned int cp)
 {
     char buf[1024];
+#if defined(_WIN32) && !defined(_WON32)
     ::WideCharToMultiByte(cp, 0, text, -1, buf, _countof(buf), NULL, NULL);
     buf[_countof(buf) - 1] = 0; // Avoid buffer overrun
+#else
+    // ASCII only
+    size_t ich;
+    for (ich = 0; text[ich] && ich < _countof(buf) - 1; ++ich)
+    {
+        assert(text[ich] < 0x80);
+        buf[ich] = (char)text[ich];
+    }
+    buf[ich] = 0;
+#endif
     return buf;
 }
-#endif
 
 std::wstring guid_wide_from_ansi(const char *text, unsigned int cp)
 {
@@ -247,9 +257,11 @@ std::wstring guid_wide_from_ansi(const char *text, unsigned int cp)
     ::MultiByteToWideChar(cp, 0, text, -1, buf, _countof(buf));
     buf[_countof(buf) - 1] = 0; // Avoid buffer overrun
 #else
+    // ASCII only
     size_t ich;
     for (ich = 0; text[ich] && ich < _countof(buf) - 1; ++ich)
     {
+        assert(text[ich] < 0x80);
         buf[ich] = text[ich];
     }
     buf[ich] = 0;

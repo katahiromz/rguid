@@ -78,9 +78,7 @@ void guid_random_generate(GUID& guid);
 
 bool guid_equal(const GUID& guid1, const GUID& guid2);
 
-#ifdef _WIN32
 std::string guid_ansi_from_wide (const wchar_t *text, unsigned int cp = 0);
-#endif
 std::wstring guid_wide_from_ansi(const  char   *text, unsigned int cp = 0);
 
 bool guid_from_definition(GUID& guid, const wchar_t *text);
