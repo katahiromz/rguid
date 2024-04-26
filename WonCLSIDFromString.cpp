@@ -1,4 +1,4 @@
-#include "guid.h"
+#include "WonCLSIDFromString.h"
 #include <cstring>
 
 #if !defined(_WIN32) || defined(_WON32)

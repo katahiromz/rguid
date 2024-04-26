@@ -5,6 +5,7 @@
         #include <objbase.h>
         #define WonCLSIDFromString CLSIDFromString
     #else
+        #include "guid.h"
         #ifdef __cplusplus
             extern "C"
         #endif

@@ -1,4 +1,4 @@
-#include "guid.h"
+#include "WonStringFromGUID2.h"
 
 #if !defined(_WIN32) || defined(_WON32)
 

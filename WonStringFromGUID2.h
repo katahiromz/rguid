@@ -5,6 +5,7 @@
         #include <objbase.h>
         #define WonStringFromGUID2 StringFromGUID2
     #else
+        #include "guid.h"
         #ifdef __cplusplus
             extern "C"
             int WonStringFromGUID2(REFGUID id, wchar_t *str, int cmax);
