@@ -121,7 +121,7 @@ bool guid_from_definition(GUID& guid, const wchar_t *text, std::wstring *p_name)
     if (p_name)
         *p_name = items[0];
 
-    guid.Data1 = wcstoul(items[1].c_str(), NULL, 0);
+    guid.Data1 = (uint32_t)wcstoul(items[1].c_str(), NULL, 0);
     guid.Data2 = (uint16_t)wcstoul(items[2].c_str(), NULL, 0);
     guid.Data3 = (uint16_t)wcstoul(items[3].c_str(), NULL, 0);
     guid.Data4[0] = (uint8_t)wcstoul(items[4].c_str(), NULL, 0);
@@ -392,7 +392,7 @@ bool guid_from_struct_text(GUID& guid, const wchar_t *text)
         mstr_trim(item, L" \t");
     }
 
-    guid.Data1 = wcstoul(items[0].c_str(), NULL, 0);
+    guid.Data1 = (uint32_t)wcstoul(items[0].c_str(), NULL, 0);
     guid.Data2 = (uint16_t)wcstoul(items[1].c_str(), NULL, 0);
     guid.Data3 = (uint16_t)wcstoul(items[2].c_str(), NULL, 0);
     guid.Data4[0] = (uint8_t)wcstoul(items[3].c_str(), NULL, 0);
@@ -568,7 +568,7 @@ bool guid_search_by_name(GUID_FOUND& found, const GUID_DATA *data, const wchar_t
         std::wstring entry_name = entry.name;
         _wcsupr(&entry_name[0]);
 
-        if (wcscmp(entry_name.c_str(), strName.c_str()) == 0)
+        if (entry_name == strName)
         {
             found.push_back(entry);
             return true;
