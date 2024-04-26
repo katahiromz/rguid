@@ -7,16 +7,20 @@ cmake_minimum_required(VERSION 3.5)
 project(rguid CXX)
 
 ##############################################################################
+# options
 
-option(WANT_RGUID_EXE "Do you want rguid.exe?" ON)
+option(RGUID_WANT_EXE "Do you want rguid.exe?" ON)
+option(RGUID_USE_WON32 "Do you use Won32?" OFF)
 
 ##############################################################################
 
 # libguid.a
 add_library(guid STATIC guid.cpp StringFromGUID2.cpp CLSIDFromString.cpp)
-target_compile_definitions(guid PRIVATE UNICODE _UNICODE _WON32)
+if(RGUID_USE_WON32)
+    target_compile_definitions(guid PRIVATE _WON32)
+endif()
 
-if(WANT_RGUID_EXE)
+if(RGUID_WANT_EXE)
     # rguid.exe
     add_executable(rguid rguid.cpp)
     target_compile_definitions(rguid PRIVATE UNICODE _UNICODE)
