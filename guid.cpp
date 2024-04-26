@@ -248,7 +248,7 @@ std::wstring guid_wide_from_ansi(const char *text, unsigned int cp)
     buf[_countof(buf) - 1] = 0; // Avoid buffer overrun
 #else
     size_t ich;
-    for (ich = 0; text[ich] && ich < sizeof(buf) / sizeof(buf[0]); ++ich)
+    for (ich = 0; text[ich] && ich < sizeof(buf) / sizeof(buf[0]) - 1; ++ich)
     {
         buf[ich] = text[ich];
     }
