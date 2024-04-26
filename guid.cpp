@@ -311,10 +311,7 @@ std::wstring guid_to_hex_text(const GUID& guid)
     {
         if (ib)
             ret += L' ';
-        wchar_t sz[3];
-        sz[0] = L"0123456789ABCDEF"[pb[ib] & 0xF];
-        sz[1] = L"0123456789ABCDEF"[pb[ib] >> 4];
-        sz[2] = 0;
+        wchar_t sz[3] = { L"0123456789ABCDEF"[pb[ib] >> 4], L"0123456789ABCDEF"[pb[ib] & 0xF], 0 };
         ret += sz;
     }
     return ret;
