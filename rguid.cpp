@@ -1,11 +1,14 @@
 // rguid.cpp --- The GUID analyzer
 // License: MIT
 
+#define INITGUID
 #include "guid.h"
 #include <cassert>
 
 #if !defined(_WIN32) || defined(_WON32)
 DEFINE_GUID(IID_IShellLinkW, 0x000214F9, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);
+#else
+#include <shlobj.h>
 #endif
 
 GuidDataBase g_database;
