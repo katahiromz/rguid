@@ -468,6 +468,9 @@ std::wstring guid_to_struct_text(const GUID& guid)
 
 bool guid_parse(GUID& guid, const wchar_t *text)
 {
+    if (guid_from_guid_text(guid, text))
+        return true;
+
     if (guid_from_definition(guid, text))
         return true;
 
