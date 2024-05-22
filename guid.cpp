@@ -2,6 +2,7 @@
 // License: MIT
 
 #include "guid.h"
+#include <algorithm>
 #include <cstring>
 #include <cassert>
 #include "WonCLSIDFromString.h"
@@ -83,12 +84,47 @@ bool guid_is_valid_value(const wchar_t *text)
     return (*endptr == 0 || (endptr[0] == 'L' && endptr[1] == 0));
 }
 
+void guid_remove_comments(std::wstring& str)
+{
+    // Remove C comments
+    size_t ich0 = 0, ich1;
+    for (;;)
+    {
+        ich0 = str.find(L"/*", ich0);
+        if (ich0 == str.npos)
+            break;
+
+        ich1 = str.find(L"*/", ich0);
+        if (ich1 == str.npos)
+            break;
+
+        str.erase(ich0, ich1 + 2 - ich0);
+    }
+
+    // Remove C++ comments
+    ich0 = 0;
+    for (;;)
+    {
+        ich0 = str.find(L"//", ich0);
+        if (ich0 == str.npos)
+            break;
+
+        ich1 = str.find(L"\n", ich0);
+        if (ich1 == str.npos)
+            str.erase(ich0, str.size() - ich0);
+        else
+            str.erase(ich0, ich1 - ich0);
+    }
+}
+
 bool guid_from_definition(GUID& guid, const wchar_t *text, std::wstring *p_name)
 {
     std::wstring str = text;
     mstr_trim(str, L" \t\r\n");
+    guid_remove_comments(str);
+    mstr_trim(str, L" \t\r\n");
 
-    if (str.find(L"DEFINE_GUID") == 0)
+    if (str.find(L"DEFINE_GUID") == 0 || str.find(L"EXTERN_GUID") == 0)
         str.erase(0, 11);
     else
         return false;
@@ -164,6 +200,9 @@ bool guid_from_guid_text(GUID& guid, const wchar_t *text)
 bool guid_from_struct_text(GUID& guid, std::wstring str)
 {
     mstr_trim(str, L" \t\r\n");
+    guid_remove_comments(str);
+    mstr_trim(str, L" \t\r\n");
+
     if (str.size() && str[str.size() - 1] == L';')
         str.erase(str.size() - 1, 1);
     mstr_trim(str, L" \t\r\n");
@@ -253,7 +292,7 @@ std::string guid_ansi_from_wide(const wchar_t *text, unsigned int cp)
     size_t ich;
     for (ich = 0; text[ich] && ich < _countof(buf) - 1; ++ich)
     {
-        assert(text[ich] < 0x80);
+        //assert(text[ich] < 0x80);
         buf[ich] = (char)text[ich];
     }
     buf[ich] = 0;
@@ -272,7 +311,7 @@ std::wstring guid_wide_from_ansi(const char *text, unsigned int cp)
     size_t ich;
     for (ich = 0; text[ich] && ich < _countof(buf) - 1; ++ich)
     {
-        assert(text[ich] < 0x80);
+        //assert(text[ich] < 0x80);
         buf[ich] = text[ich];
     }
     buf[ich] = 0;
@@ -651,3 +690,197 @@ bool guid_search_by_text(GUID_FOUND& found, const GUID_DATA *data, const wchar_t
 
     return !found.empty();
 }
+
+#if defined(_WIN32) && !defined(_WON32)
+enum ENCODING
+{
+    ENCODING_UTF8 = 0,
+    ENCODING_UTF16LE = 1,
+    ENCODING_UTF16BE = 2,
+};
+
+static bool guid_scan_text(GUID_FOUND& found, void *ptr, size_t size, ENCODING encoding)
+{
+    size_t cw = size / sizeof(uint16_t);
+
+    if (encoding == ENCODING_UTF16BE)
+    {
+        uint16_t *pw = (uint16_t *)ptr;
+        while (cw-- > 0)
+        {
+            auto low = *pw & 0xFF;
+            auto high = (*pw >> 8) & 0xFF;
+            *pw++ = (low << 8) | high;
+        }
+        return guid_scan_text(found, ptr, size, ENCODING_UTF16LE);
+    }
+
+    if (encoding == ENCODING_UTF8)
+    {
+        int cchW = MultiByteToWideChar(CP_UTF8, 0, (char *)ptr, (INT)size, NULL, 0);
+        wchar_t *pszW = (wchar_t *)malloc((cchW + 1) * sizeof(wchar_t));
+        if (!pszW)
+            return false;
+        MultiByteToWideChar(CP_UTF8, 0, (char *)ptr, (INT)size, pszW, cchW);
+        bool ret = guid_scan_text(found, pszW, cchW, ENCODING_UTF16LE);
+        free(pszW);
+        return ret;
+    }
+
+    assert(encoding == ENCODING_UTF16LE);
+
+    const wchar_t *pszW = (const wchar_t *)ptr;
+
+    // Scan DEFINE_GUID(...) and EXTERN_GUID(...)
+    for (auto pch = pszW;; )
+    {
+        auto pch0 = wcsstr(pch, L"DEFINE_GUID");
+        auto pch1 = wcsstr(pch, L"EXTERN_GUID");
+        if (!pch0 && !pch1)
+            break;
+
+        if (pch1 && pch0 > pch1)
+            pch0 = pch1;
+
+        if (!pch0)
+            break;
+
+        auto pch2 = wcschr(pch0, L')');
+        if (pch2 == nullptr)
+        {
+            pch = pch0 + 1;
+            continue;
+        }
+
+        GUID guid;
+        std::wstring str(pch0, pch2 - pch0 + 1), name;
+        if (guid_from_definition(guid, str.c_str(), &name))
+        {
+            GUID_ENTRY entry;
+            entry.name = name;
+            entry.guid = guid;
+            found.push_back(entry);
+            pch = pch2 + 1;
+            continue;
+        }
+
+        pch = pch0 + 1;
+    }
+
+    // Scan {GUID}
+    for (auto pch = pszW;; )
+    {
+        auto pch0 = wcsstr(pch, L"{");
+        if (!pch0)
+            break;
+
+        auto pch1 = wcschr(pch0, L'}');
+        if (pch1 == nullptr)
+        {
+            pch = pch0 + 1;
+            continue;
+        }
+
+        GUID guid;
+        std::wstring str(pch0, pch1 - pch0 + 1);
+        if (guid_from_guid_text(guid, str.c_str()))
+        {
+            GUID_ENTRY entry;
+            entry.guid = guid;
+            found.push_back(entry);
+            pch = pch1 + 1;
+            continue;
+        }
+
+        pch = pch0 + 1;
+    }
+
+    std::sort(found.begin(), found.end(), [](const GUID_ENTRY& x, const GUID_ENTRY& y) {
+        if (x.name < y.name)
+            return true;
+        if (x.name > y.name)
+            return false;
+        int cmp = memcmp(&x.guid, &y.guid, sizeof(GUID));
+        return cmp < 0;
+    });
+    found.erase(std::unique(found.begin(), found.end(), [](const GUID_ENTRY& x, const GUID_ENTRY& y) {
+        return memcmp(&x.guid, &y.guid, sizeof(GUID)) == 0 && x.name == y.name;
+    }), found.end());
+
+    return found.size();
+}
+
+bool guid_scan_fp(GUID_FOUND& found, FILE *fp)
+{
+    char bom[3];
+    if (!fread(bom, 3, 1, fp))
+        return false;
+
+    ENCODING encoding;
+    if (memcmp(bom, "\xEF\xBB\xBF", 3) == 0)
+    {
+        encoding = ENCODING_UTF8;
+    }
+    else if (memcmp(bom, "\xFF\xFE", 2) == 0)
+    {
+        encoding = ENCODING_UTF16LE;
+        fseek(fp, -1, SEEK_CUR);
+    }
+    else if (memcmp(bom, "\xFE\xFF", 2) == 0)
+    {
+        encoding = ENCODING_UTF16BE;
+        fseek(fp, -1, SEEK_CUR);
+    }
+    else if (bom[0] && !bom[1])
+    {
+        encoding = ENCODING_UTF16LE;
+        fseek(fp, -3, SEEK_CUR);
+    }
+    else if (!bom[0] && bom[1])
+    {
+        encoding = ENCODING_UTF16BE;
+        fseek(fp, -3, SEEK_CUR);
+    }
+    else
+    {
+        encoding = ENCODING_UTF8;
+    }
+
+    std::string binary;
+    char buf[1024];
+    for (;;)
+    {
+        size_t size = fread(buf, 1, 1024, fp);
+        if (!size)
+            break;
+
+        binary.append(buf, size);
+    }
+
+    binary.append(1, 0);
+
+    return guid_scan_text(found, const_cast<char*>(binary.c_str()), binary.size(), encoding);
+}
+
+bool guid_scan_file_a(GUID_FOUND& found, const char *fname)
+{
+    FILE *fp = fopen(fname, "rb");
+    if (!fp)
+        return false;
+
+    bool ret = guid_scan_fp(found, fp);
+    fclose(fp);
+    return ret;
+}
+
+bool guid_scan_file_w(GUID_FOUND& found, const wchar_t *fname)
+{
+    FILE *fp = _wfopen(fname, L"rb");
+    if (!fp)
+        return false;
+
+    bool ret = guid_scan_fp(found, fp);
+    fclose(fp);
+    return ret;
+}
+#endif

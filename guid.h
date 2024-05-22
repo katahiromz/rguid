@@ -106,6 +106,17 @@ bool guid_search_by_text(GUID_FOUND& found, const GUID_DATA *data, const wchar_t
 
 bool guid_is_valid_value(const wchar_t *text);
 
+#if defined(_WIN32) && !defined(_WON32)
+    bool guid_scan_fp(GUID_FOUND& found, FILE *fp);
+    bool guid_scan_file_a(GUID_FOUND& found, const char *fname);
+    bool guid_scan_file_w(GUID_FOUND& found, const wchar_t *fname);
+    #ifdef UNICODE
+        #define guid_scan_file guid_scan_file_w
+    #else
+        #define guid_scan_file guid_scan_file_a
+    #endif
+#endif
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 class GuidDataBase

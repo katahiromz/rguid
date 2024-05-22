@@ -43,10 +43,10 @@ endif()
 
 if(RGUID_WANT_EXE)
     # rguid.exe
-    add_executable(rguid rguid.cpp)
+    add_executable(rguid rguid.cpp guid.cpp WonStringFromGUID2.cpp WonCLSIDFromString.cpp)
     target_compile_definitions(rguid PRIVATE ${RGUID_DEFINITIONS})
     target_include_directories(rguid PRIVATE ${RGUID_INCLUDE_DIRS})
-    target_link_libraries(rguid PRIVATE shlwapi ${RGUID_LIBRARIES})
+    target_link_libraries(rguid PRIVATE shlwapi)
 endif()
 
 ##############################################################################
