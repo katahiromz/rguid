@@ -15,6 +15,7 @@ GuidDataBase g_database;
 bool g_bSearch = false;
 bool g_bList = false;
 bool g_bDefOnly = false;
+bool g_bGuidOnly = false;
 int g_nGenerate = 0;
 bool g_bScan = false;
 std::vector<std::wstring> g_strScanFiles;
@@ -95,7 +96,7 @@ void do_unittest(void)
 
 RET do_guid(REFGUID guid, std::wstring *pstrName = NULL)
 {
-    if (!g_bDefOnly)
+    if (!g_bDefOnly && !g_bGuidOnly)
     {
         std::printf("\n--------------------\n");
     }
@@ -108,7 +109,7 @@ RET do_guid(REFGUID guid, std::wstring *pstrName = NULL)
             if (guid_equal(guid, entry.guid))
             {
                 name = entry.name;
-                if (!g_bDefOnly)
+                if (!g_bDefOnly && !g_bGuidOnly)
                     std::printf("Name: %ls\n\n", name.c_str());
             }
         }
@@ -118,7 +119,12 @@ RET do_guid(REFGUID guid, std::wstring *pstrName = NULL)
         name = *pstrName;
     }
 
-    if (g_bDefOnly)
+    if (g_bGuidOnly)
+    {
+        auto str = guid_to_guid_text(guid);
+        std::printf("%ls\n", str.c_str());
+    }
+    else if (g_bDefOnly)
     {
         auto str = guid_to_definition(guid, name.empty() ? nullptr : name.c_str());
         std::printf("%ls\n", str.c_str());
@@ -155,14 +161,14 @@ RET do_arg(std::wstring str)
     }
     else
     {
-        if (!g_bDefOnly)
+        if (!g_bDefOnly && !g_bGuidOnly)
             std::printf("Not found\n");
         return RET_FAILED;
     }
 
     if (found.size() > 1)
     {
-        if (!g_bDefOnly)
+        if (!g_bDefOnly && !g_bGuidOnly)
             std::printf("Found %d found.\n", (int)found.size());
     }
 
@@ -197,6 +203,12 @@ RET parse_option(std::wstring str)
     if (str == L"--def-only")
     {
         g_bDefOnly = true;
+        return RET_SUCCESS;
+    }
+
+    if (str == L"--guid-only")
+    {
+        g_bGuidOnly = true;
         return RET_SUCCESS;
     }
 
