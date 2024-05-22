@@ -1,0 +1,6 @@
+# The History (Change Log) of rguid
+
+- 2024-04-21 1.9.2
+    - First release.
+- 2024-05-22 2.0.0
+    - Support of "--def-only".
