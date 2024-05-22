@@ -4,3 +4,5 @@
     - First release.
 - 2024-05-22 2.0.0
     - Support of "--def-only".
+- 2024-05-22 2.0.1
+    - Added semicolon to struct data output.
