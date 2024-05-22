@@ -754,12 +754,40 @@ static bool guid_scan_text(GUID_FOUND& found, void *ptr, size_t size, ENCODING e
     const wchar_t *pszW = (const wchar_t *)ptr;
 
     // Scan DEFINE_GUID(...) and EXTERN_GUID(...)
+    bool no_define_guid = false;
+    bool no_extern_guid = false;
+    bool no_codecapi_guid = false;
+    bool no_midl_guid = false;
     for (auto pch = pszW;; )
     {
-        auto pch0 = wcsstr(pch, L"DEFINE_GUID");
-        auto pch1 = wcsstr(pch, L"EXTERN_GUID");
-        auto pch5 = wcsstr(pch, L"DEFINE_CODECAPI_GUID");
-        auto pch6 = wcsstr(pch, L"MIDL_DEFINE_GUID");
+        const wchar_t *pch0 = nullptr;
+        const wchar_t *pch1 = nullptr;
+        const wchar_t *pch5 = nullptr;
+        const wchar_t *pch6 = nullptr;
+        if (!no_define_guid)
+        {
+            pch0 = wcsstr(pch, L"DEFINE_GUID");
+            if (!pch0)
+                no_define_guid = true;
+        }
+        if (!no_extern_guid)
+        {
+            pch1 = wcsstr(pch, L"EXTERN_GUID");
+            if (!pch1)
+                no_extern_guid = true;
+        }
+        if (!no_codecapi_guid)
+        {
+            pch5 = wcsstr(pch, L"DEFINE_CODECAPI_GUID");
+            if (!pch5)
+                no_codecapi_guid = true;
+        }
+        if (!no_midl_guid)
+        {
+            pch6 = wcsstr(pch, L"MIDL_DEFINE_GUID");
+            if (!pch6)
+                no_midl_guid = true;
+        }
         if (!pch0 && pch1)
             pch0 = pch1;
         if (!pch0 && pch5)
