@@ -16,7 +16,7 @@ bool g_bSearch = false;
 bool g_bList = false;
 int g_nGenerate = 0;
 bool g_bScan = false;
-std::wstring g_strScanFile;
+std::vector<std::wstring> g_strScanFiles;
 
 void show_version(void)
 {
@@ -39,7 +39,7 @@ void usage(void)
         "                      0x00, 0xA0, 0xC9, 0x0A, 0x90, 0xAC);\"\n"
         "  rguid --list\n"
         "  rguid --generate NUMBER\n"
-        "  rguid --scan YOUR_FILE\n"
+        "  rguid --scan \"YOUR_FILE_1\" \"YOUR_FILE_2\" ...\n"
         "  rguid --help\n"
         "  rguid --version\n"
         "\n"
@@ -236,15 +236,19 @@ RET parse_cmd_line(std::vector<std::wstring>& args, int argc, char **argv)
 
             if (str == L"--scan")
             {
-                if (argc <= iarg + 1)
+                if (iarg + 1 >= argc)
                 {
                     fprintf(stderr, "ERROR: --scan needs parameter\n");
                     return RET_FAILED;
                 }
 
                 g_bScan = true;
-                g_strScanFile = guid_wide_from_ansi(argv[iarg + 1]);
                 ++iarg;
+                while (iarg < argc)
+                {
+                    g_strScanFiles.push_back(guid_wide_from_ansi(argv[iarg]));
+                    ++iarg;
+                }
                 continue;
             }
 
@@ -318,17 +322,31 @@ int main(int argc, char **argv)
     if (g_bScan)
     {
         GUID_FOUND found;
-        if (guid_scan_file_w(found, g_strScanFile.c_str()))
+        for (auto& file : g_strScanFiles)
         {
-            for (auto& entry : found)
-            {
-                auto define_guid = guid_to_definition(entry.guid, entry.name.c_str());
-                std::printf("%ls\n", define_guid.c_str());
-            }
-            return 0;
+            guid_scan_file_w(found, file.c_str());
         }
-        std::printf("ERROR: No DEFINE_GUID(...), EXTERN_GUID(...), nor {GUID} found\n");
-        return -1;
+
+        for (auto& entry : found)
+        {
+            if (entry.name.empty())
+            {
+                GUID_FOUND found2;
+                if (g_database.search_by_guid(found2, entry.guid))
+                {
+                    entry.name = found2[0].name;
+                }
+            }
+        }
+
+        guid_sort_and_unique(found);
+
+        for (auto& entry : found)
+        {
+            auto define_guid = guid_to_definition(entry.guid, entry.name.c_str());
+            std::printf("%ls\n", define_guid.c_str());
+        }
+        return 0;
     }
 
     if (g_nGenerate > 0)

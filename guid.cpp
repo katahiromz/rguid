@@ -825,6 +825,13 @@ static bool guid_scan_text(GUID_FOUND& found, void *ptr, size_t size, ENCODING e
         pch = pch0 + 1;
     }
 
+    guid_sort_and_unique(found);
+
+    return found.size();
+}
+
+void guid_sort_and_unique(GUID_FOUND& found)
+{
     std::sort(found.begin(), found.end(), [](const GUID_ENTRY& x, const GUID_ENTRY& y) {
         if (x.name < y.name)
             return true;
@@ -836,8 +843,6 @@ static bool guid_scan_text(GUID_FOUND& found, void *ptr, size_t size, ENCODING e
     found.erase(std::unique(found.begin(), found.end(), [](const GUID_ENTRY& x, const GUID_ENTRY& y) {
         return memcmp(&x.guid, &y.guid, sizeof(GUID)) == 0 && x.name == y.name;
     }), found.end());
-
-    return found.size();
 }
 
 bool guid_scan_fp(GUID_FOUND& found, FILE *fp)
