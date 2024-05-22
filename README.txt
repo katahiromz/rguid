@@ -25,3 +25,7 @@ You can specify partial GUIDs and multiple GUIDs.
 ## Copyright
 
 - Copyright © 2024 Katayama Hirofumi MZ.
+
+## Contact us
+
+Send e-mail to katayama.hirofumi.mz@gmail.com
