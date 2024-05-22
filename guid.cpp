@@ -124,10 +124,26 @@ bool guid_from_definition(GUID& guid, const wchar_t *text, std::wstring *p_name)
     guid_remove_comments(str);
     mstr_trim(str, L" \t\r\n");
 
+    bool codecapi = false, midl = false;
     if (str.find(L"DEFINE_GUID") == 0 || str.find(L"EXTERN_GUID") == 0)
+    {
         str.erase(0, 11);
+    }
+    else if (str.find(L"DEFINE_CODECAPI_GUID") == 0)
+    {
+        str.erase(0, 20);
+        codecapi = true;
+    }
+    else if (str.find(L"MIDL_DEFINE_GUID") == 0)
+    {
+        str.erase(0, 16);
+        midl = true;
+    }
+    
     else
+    {
         return false;
+    }
 
     mstr_trim(str, L" \t\r\n");
 
@@ -154,6 +170,12 @@ bool guid_from_definition(GUID& guid, const wchar_t *text, std::wstring *p_name)
 
     std::vector<std::wstring> items;
     mstr_split(items, str, L",");
+
+    if (codecapi)
+        items.erase(items.begin() + 1);
+
+    if (midl)
+        items.erase(items.begin());
 
     if (items.size() != 12)
         return false;
@@ -736,17 +758,25 @@ static bool guid_scan_text(GUID_FOUND& found, void *ptr, size_t size, ENCODING e
     {
         auto pch0 = wcsstr(pch, L"DEFINE_GUID");
         auto pch1 = wcsstr(pch, L"EXTERN_GUID");
-        if (!pch0 && !pch1)
-            break;
-
-        if (pch1 && pch0 > pch1)
+        auto pch5 = wcsstr(pch, L"DEFINE_CODECAPI_GUID");
+        auto pch6 = wcsstr(pch, L"MIDL_DEFINE_GUID");
+        if (!pch0 && pch1)
             pch0 = pch1;
-
+        if (!pch0 && pch5)
+            pch0 = pch5;
+        if (!pch0 && pch6)
+            pch0 = pch6;
+        if (pch0 > pch1 && pch1)
+            pch0 = pch1;
+        if (pch0 > pch5 && pch5)
+            pch0 = pch5;
+        if (pch0 > pch6 && pch6)
+            pch0 = pch6;
         if (!pch0)
             break;
 
         auto pch2 = wcschr(pch0, L')');
-        if (pch2 == nullptr)
+        if (!pch2)
         {
             pch = pch0 + 1;
             continue;
