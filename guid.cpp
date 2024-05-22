@@ -74,6 +74,15 @@ bool guid_equal(const GUID& guid1, const GUID& guid2)
 #endif
 }
 
+bool guid_is_valid_value(const wchar_t *text)
+{
+    std::wstring str = text;
+    mstr_trim(str, L" \t\r\n");
+    wchar_t *endptr;
+    wcstoul(str.c_str(), &endptr, 0);
+    return (*endptr == 0 || (endptr[0] == 'L' && endptr[1] == 0));
+}
+
 bool guid_from_definition(GUID& guid, const wchar_t *text, std::wstring *p_name)
 {
     std::wstring str = text;
@@ -118,8 +127,11 @@ bool guid_from_definition(GUID& guid, const wchar_t *text, std::wstring *p_name)
         mstr_trim(item, L" \t");
     }
 
-    if (p_name)
-        *p_name = items[0];
+    for (int i = 1; i <= 11; ++i)
+    {
+        if (!guid_is_valid_value(items[i].c_str()))
+            return false;
+    }
 
     guid.Data1 = (uint32_t)wcstoul(items[1].c_str(), NULL, 0);
     guid.Data2 = (uint16_t)wcstoul(items[2].c_str(), NULL, 0);
@@ -132,6 +144,9 @@ bool guid_from_definition(GUID& guid, const wchar_t *text, std::wstring *p_name)
     guid.Data4[5] = (uint8_t)wcstoul(items[9].c_str(), NULL, 0);
     guid.Data4[6] = (uint8_t)wcstoul(items[10].c_str(), NULL, 0);
     guid.Data4[7] = (uint8_t)wcstoul(items[11].c_str(), NULL, 0);
+
+    if (p_name)
+        *p_name = items[0];
 
     return true;
 }

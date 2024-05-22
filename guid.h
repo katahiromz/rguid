@@ -13,7 +13,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define GUID_VERSION "rguid version 1.9.5 by katahiromz"
+#define GUID_VERSION "rguid version 1.9.6 by katahiromz"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // _countof
@@ -103,6 +103,8 @@ std::wstring guid_dump(const GUID& guid, const wchar_t *name);
 bool guid_search_by_guid(GUID_FOUND& found, const GUID_DATA *data, const GUID& guid);
 bool guid_search_by_name(GUID_FOUND& found, const GUID_DATA *data, const wchar_t *name);
 bool guid_search_by_text(GUID_FOUND& found, const GUID_DATA *data, const wchar_t *text);
+
+bool guid_is_valid_value(const wchar_t *text);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
