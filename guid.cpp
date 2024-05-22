@@ -216,6 +216,8 @@ bool guid_from_struct_text(GUID& guid, std::wstring str)
     for (auto& item : items)
     {
         mstr_trim(item, L" \t");
+        if (!guid_is_valid_value(item.c_str()))
+            return false;
     }
 
     guid.Data1 = (uint32_t)wcstoul(items[0].c_str(), NULL, 0);
