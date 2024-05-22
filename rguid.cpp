@@ -103,7 +103,7 @@ RET do_guid(REFGUID guid, std::wstring *pstrName = NULL)
             if (guid_equal(guid, entry.guid))
             {
                 name = entry.name;
-                std::printf("Name: %ls\n", name.c_str());
+                std::printf("Name: %ls\n\n", name.c_str());
             }
         }
     }
