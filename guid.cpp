@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstring>
 #include <cassert>
+#include <cwchar>
 #include "WonCLSIDFromString.h"
 #include "WonStringFromGUID2.h"
 
@@ -225,60 +226,63 @@ bool guid_from_struct_text(GUID& guid, std::wstring str)
     guid_remove_comments(str);
     mstr_trim(str, L" \t\r\n");
 
+    int level = 0;
+    for (size_t ich = 0; ich < str.size(); ++ich)
+    {
+        if (str[ich] == L'{')
+            ++level;
+        if (str[ich] == L'}')
+            --level;
+    }
+
+    if (level != 0)
+        return false;
+
     if (str.size() && str[str.size() - 1] == L';')
         str.erase(str.size() - 1, 1);
     mstr_trim(str, L" \t\r\n");
     if (str.size() && str[0] == L'{')
+    {
         str.erase(0, 1);
+    }
     else
+    {
         return false;
+    }
     mstr_trim(str, L" \t\r\n");
     if (str.size() && str[str.size() - 1] == L'}')
+    {
         str.erase(str.size() - 1, 1);
+    }
     else
+    {
         return false;
+    }
     mstr_trim(str, L" \t\r\n");
-    if (str.size() && str[str.size() - 1] == L'}')
-        str.erase(str.size() - 1, 1);
-    else
-        return false;
+
+    mstr_replace_all(str, L"{", L"");
+    mstr_replace_all(str, L"}", L"");
 
     mstr_replace_all(str, L" ", L"");
     mstr_replace_all(str, L"\t", L"");
 
-    auto ich0 = str.find(L',');
-    if (ich0 != str.npos)
-    {
-        auto ich1 = str.find(L',', ich0 + 1);
-        if (ich1 != str.npos)
-        {
-            auto ich2 = str.find(L',', ich1 + 1);
-            if (ich2 == str.npos || str[ich2 + 1] != L'{')
-                return false;
-
-            str.erase(ich2 + 1, 1);
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else
-    {
-        return false;
-    }
+    mstr_trim(str, L" \t\r\n");
 
     std::vector<std::wstring> items;
     mstr_split(items, str, L",");
 
     if (items.size() != 11)
+    {
         return false;
+    }
 
     for (auto& item : items)
     {
         mstr_trim(item, L" \t");
         if (!guid_is_valid_value(item.c_str()))
+        {
             return false;
+        }
     }
 
     guid.Data1 = (uint32_t)wcstoul(items[0].c_str(), NULL, 0);
@@ -414,75 +418,7 @@ std::wstring guid_to_hex_text(const GUID& guid)
 bool guid_from_struct_text(GUID& guid, const wchar_t *text)
 {
     std::wstring str = text;
-
-    mstr_trim(str, L" \t\r\n");
-    if (str.size() && str[str.size() - 1] == L';')
-        str.erase(str.size() - 1, 1);
-    mstr_trim(str, L" \t\r\n");
-    if (str.size() && str[0] == L'{')
-        str.erase(0, 1);
-    else
-        return false;
-    mstr_trim(str, L" \t\r\n");
-    if (str.size() && str[str.size() - 1] == L'}')
-        str.erase(str.size() - 1, 1);
-    else
-        return false;
-    mstr_trim(str, L" \t\r\n");
-    if (str.size() && str[str.size() - 1] == L'}')
-        str.erase(str.size() - 1, 1);
-    else
-        return false;
-
-    mstr_replace_all(str, L" ", L"");
-    mstr_replace_all(str, L"\t", L"");
-
-    auto ich0 = str.find(L',');
-    if (ich0 != str.npos)
-    {
-        auto ich1 = str.find(L',', ich0 + 1);
-        if (ich1 != str.npos)
-        {
-            auto ich2 = str.find(L',', ich1 + 1);
-            if (ich2 == str.npos || str[ich2 + 1] != L'{')
-                return false;
-
-            str.erase(ich2 + 1, 1);
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else
-    {
-        return false;
-    }
-
-    std::vector<std::wstring> items;
-    mstr_split(items, str, L",");
-
-    if (items.size() != 11)
-        return false;
-
-    for (auto& item : items)
-    {
-        mstr_trim(item, L" \t");
-    }
-
-    guid.Data1 = (uint32_t)wcstoul(items[0].c_str(), NULL, 0);
-    guid.Data2 = (uint16_t)wcstoul(items[1].c_str(), NULL, 0);
-    guid.Data3 = (uint16_t)wcstoul(items[2].c_str(), NULL, 0);
-    guid.Data4[0] = (uint8_t)wcstoul(items[3].c_str(), NULL, 0);
-    guid.Data4[1] = (uint8_t)wcstoul(items[4].c_str(), NULL, 0);
-    guid.Data4[2] = (uint8_t)wcstoul(items[5].c_str(), NULL, 0);
-    guid.Data4[3] = (uint8_t)wcstoul(items[6].c_str(), NULL, 0);
-    guid.Data4[4] = (uint8_t)wcstoul(items[7].c_str(), NULL, 0);
-    guid.Data4[5] = (uint8_t)wcstoul(items[8].c_str(), NULL, 0);
-    guid.Data4[6] = (uint8_t)wcstoul(items[9].c_str(), NULL, 0);
-    guid.Data4[7] = (uint8_t)wcstoul(items[10].c_str(), NULL, 0);
-
-    return true;
+    return guid_from_struct_text(guid, str);
 }
 
 bool guid_from_hex_text(GUID& guid, const wchar_t *text)
@@ -758,12 +694,14 @@ static bool guid_scan_text(GUID_FOUND& found, void *ptr, size_t size, ENCODING e
     bool no_extern_guid = false;
     bool no_codecapi_guid = false;
     bool no_midl_guid = false;
+    bool no_const = false;
     for (auto pch = pszW;; )
     {
         const wchar_t *pch0 = nullptr;
         const wchar_t *pch1 = nullptr;
         const wchar_t *pch5 = nullptr;
         const wchar_t *pch6 = nullptr;
+        const wchar_t *pch7 = nullptr;
         if (!no_define_guid)
         {
             pch0 = wcsstr(pch, L"DEFINE_GUID");
@@ -788,20 +726,141 @@ static bool guid_scan_text(GUID_FOUND& found, void *ptr, size_t size, ENCODING e
             if (!pch6)
                 no_midl_guid = true;
         }
+        if (!no_const)
+        {
+            pch7 = wcsstr(pch, L"const");
+            if (!pch7)
+                no_const = true;
+        }
         if (!pch0 && pch1)
             pch0 = pch1;
         if (!pch0 && pch5)
             pch0 = pch5;
         if (!pch0 && pch6)
             pch0 = pch6;
+        if (!pch0 && pch7)
+            pch0 = pch7;
         if (pch0 > pch1 && pch1)
             pch0 = pch1;
         if (pch0 > pch5 && pch5)
             pch0 = pch5;
         if (pch0 > pch6 && pch6)
             pch0 = pch6;
+        if (pch0 > pch7 && pch7)
+            pch0 = pch7;
         if (!pch0)
             break;
+
+        if (pch0 == pch7)
+        {
+            if (!iswspace(pch0[5]))
+            {
+                pch = pch0 + 5;
+                continue;
+            }
+            pch0 += 5; // "const"
+
+            const wchar_t *pch10 = pch0;
+            while (*pch0 && iswspace(*pch0))
+                ++pch0;
+
+            // GUID
+            if (memcmp(pch0, L"GUID", 4 * sizeof(wchar_t)) != 0 || !iswspace(pch0[4]))
+            {
+                pch = pch10 + 1;
+                continue;
+            }
+            pch0 += 4;
+
+            // identifier
+            std::wstring name;
+            for (;;)
+            {
+                if (*pch0 && iswspace(*pch0))
+                    ++pch0;
+
+                if (!iswalpha(*pch0) && *pch0 != L'_')
+                {
+                    name.clear();
+                    break;
+                }
+
+                do
+                {
+                    name += *pch0;
+                    ++pch0;
+                } while (*pch0 && (iswalnum(*pch0) || *pch0 == L'_'));
+
+                if (name == L"OLEDBDECLSPEC")
+                {
+                    name.clear();
+                    continue;
+                }
+
+                break;
+            }
+
+            if (name.empty())
+            {
+                pch = pch10 + 1;
+                continue;
+            }
+
+            while (*pch0 && iswspace(*pch0))
+                ++pch0;
+
+            // "="
+            if (*pch0 != L'=')
+            {
+                pch = pch10 + 1;
+                continue;
+            }
+            ++pch0;
+
+            while (*pch0 && iswspace(*pch0))
+                ++pch0;
+
+            if (*pch0 != L'{')
+            {
+                pch = pch10 + 1;
+                continue;
+            }
+
+            const wchar_t *pch11 = pch0;
+            int level = 0;
+            while (*pch0)
+            {
+                if (*pch0 == ';' || *pch0 == '=')
+                {
+                    pch11 = pch0;
+                    break;
+                }
+                if (*pch0 == '{')
+                    ++level;
+                if (*pch0 == '}')
+                {
+                    --level;
+                    if (level == 0)
+                        break;
+                }
+                ++pch0;
+            }
+
+            GUID guid;
+            std::wstring str(pch11, pch0 - pch11 + 1);
+            if (guid_from_struct_text(guid, str))
+            {
+                GUID_ENTRY entry;
+                entry.name = name;
+                entry.guid = guid;
+                found.push_back(entry);
+                pch = pch0 + 1;
+                continue;
+            }
+
+            pch = pch11;
+            continue;
+        }
 
         auto pch2 = wcschr(pch0, L')');
         if (!pch2)
