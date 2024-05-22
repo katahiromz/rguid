@@ -468,8 +468,15 @@ std::wstring guid_to_definition(const GUID& guid, const wchar_t *name)
     return sz;
 }
 
-std::wstring guid_to_struct_text(const GUID& guid)
+std::wstring guid_to_struct_text(const GUID& guid, const wchar_t *name)
 {
+    std::wstring ret;
+    if (name)
+    {
+        ret += L"const GUID ";
+        ret += name;
+        ret += L" = ";
+    }
     wchar_t sz[256];
     swprintf(sz,
         L"{ 0x%08X, 0x%04X, 0x%04X, { 0x%02X, 0x%02X, 0x%02X, "
@@ -477,7 +484,8 @@ std::wstring guid_to_struct_text(const GUID& guid)
         guid.Data1, guid.Data2, guid.Data3,
         guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
         guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
-    return sz;
+    ret += sz;
+    return ret;
 }
 
 bool guid_parse(GUID& guid, const wchar_t *text)
@@ -518,8 +526,9 @@ std::wstring guid_dump(const GUID& guid, const wchar_t *name)
     ret += hex_text;
     ret += L"\n\n";
 
-    auto struct_text = guid_to_struct_text(guid);
-    ret += L"Struct: ";
+    auto struct_text = guid_to_struct_text(guid, name);
+    if (!name)
+        ret += L"Struct: ";
     ret += struct_text;
     ret += L"\n";
 

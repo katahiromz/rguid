@@ -89,7 +89,7 @@ bool guid_from_hex_text(GUID& guid, const wchar_t *text);
 
 std::wstring guid_to_definition(const GUID& guid, const wchar_t *name = NULL);
 std::wstring guid_to_guid_text(const GUID& guid);
-std::wstring guid_to_struct_text(const GUID& guid);
+std::wstring guid_to_struct_text(const GUID& guid, const wchar_t *name = NULL);
 std::wstring guid_to_hex_text(const GUID& guid);
 
 bool guid_is_definition(const wchar_t *text);

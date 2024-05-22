@@ -14,9 +14,11 @@ DEFINE_GUID(IID_IShellLinkW, 0x000214F9, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00,
 GuidDataBase g_database;
 bool g_bSearch = false;
 bool g_bList = false;
+bool g_bDefOnly = false;
 int g_nGenerate = 0;
 bool g_bScan = false;
 std::vector<std::wstring> g_strScanFiles;
+
 
 void show_version(void)
 {
@@ -93,7 +95,10 @@ void do_unittest(void)
 
 RET do_guid(REFGUID guid, std::wstring *pstrName = NULL)
 {
-    std::printf("\n--------------------\n");
+    if (!g_bDefOnly)
+    {
+        std::printf("\n--------------------\n");
+    }
 
     std::wstring name;
     if (pstrName == NULL)
@@ -103,13 +108,27 @@ RET do_guid(REFGUID guid, std::wstring *pstrName = NULL)
             if (guid_equal(guid, entry.guid))
             {
                 name = entry.name;
-                std::printf("Name: %ls\n\n", name.c_str());
+                if (!g_bDefOnly)
+                    std::printf("Name: %ls\n\n", name.c_str());
             }
         }
     }
+    else
+    {
+        name = *pstrName;
+    }
 
-    auto str = guid_dump(guid, (pstrName ? pstrName->c_str() : name.c_str()));
-    std::printf("%ls", str.c_str());
+    if (g_bDefOnly)
+    {
+        auto str = guid_to_definition(guid, name.empty() ? nullptr : name.c_str());
+        std::printf("%ls\n", str.c_str());
+    }
+    else
+    {
+        auto str = guid_dump(guid, name.empty() ? nullptr : name.c_str());
+        std::printf("%ls", str.c_str());
+    }
+
     return RET_SUCCESS;
 }
 
@@ -136,13 +155,15 @@ RET do_arg(std::wstring str)
     }
     else
     {
-        std::printf("Not found\n");
+        if (!g_bDefOnly)
+            std::printf("Not found\n");
         return RET_FAILED;
     }
 
     if (found.size() > 1)
     {
-        std::printf("Found %d found.\n", (int)found.size());
+        if (!g_bDefOnly)
+            std::printf("Found %d found.\n", (int)found.size());
     }
 
     for (auto& item : found)
@@ -170,6 +191,12 @@ RET parse_option(std::wstring str)
     if (str == L"--list")
     {
         g_bList = true;
+        return RET_SUCCESS;
+    }
+
+    if (str == L"--def-only")
+    {
+        g_bDefOnly = true;
         return RET_SUCCESS;
     }
 
