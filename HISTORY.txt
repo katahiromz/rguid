@@ -9,4 +9,4 @@
     - Support of "--guid-only".
 - 2024-07-19 2.0.2
     - Strengthened database.
-    - Add DEFINE_OLEGUID parsing.
+    - Added DEFINE_OLEGUID parsing.
