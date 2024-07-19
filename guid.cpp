@@ -125,7 +125,7 @@ bool guid_from_definition(GUID& guid, const wchar_t *text, std::wstring *p_name)
     guid_remove_comments(str);
     mstr_trim(str, L" \t\r\n");
 
-    bool codecapi = false, midl = false;
+    bool codecapi = false, midl = false, oleguid = false;
     if (str.find(L"DEFINE_GUID") == 0 || str.find(L"EXTERN_GUID") == 0)
     {
         str.erase(0, 11);
@@ -140,7 +140,12 @@ bool guid_from_definition(GUID& guid, const wchar_t *text, std::wstring *p_name)
         str.erase(0, 16);
         midl = true;
     }
-    
+    else if (str.find(L"DEFINE_OLEGUID") == 0)
+    {
+        str.erase(0, 14);
+        oleguid = true;
+    }
+
     else
     {
         return false;
@@ -177,6 +182,16 @@ bool guid_from_definition(GUID& guid, const wchar_t *text, std::wstring *p_name)
 
     if (midl)
         items.erase(items.begin());
+
+    if (oleguid && items.size() == 4)
+    {
+        std::vector<std::wstring> new_items =
+        {
+            items[0], items[1], items[2], items[3], L"0xC0",
+            L"0", L"0", L"0", L"0", L"0", L"0", L"0x46"
+        };
+        items = std::move(new_items);
+    }
 
     if (items.size() != 12)
         return false;
