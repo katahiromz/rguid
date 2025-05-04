@@ -594,11 +594,7 @@ bool guid_is_struct_text(const wchar_t *text)
 
 void guid_random_generate(GUID& guid)
 {
-    uint8_t *pb = (uint8_t *)&guid;
-    for (size_t ib = 0; ib < sizeof(guid); ++ib)
-    {
-        pb[ib] = uint8_t(std::rand());
-    }
+    CoCreateGuid(&guid);
 }
 
 bool guid_search_by_name(GUID_FOUND& found, const GUID_DATA *data, const wchar_t *name)
