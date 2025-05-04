@@ -10,3 +10,4 @@
 - 2024-07-19 2.0.2
     - Strengthened database.
     - Added DEFINE_OLEGUID parsing.
+- 2025-XX-YY 2.0.3
